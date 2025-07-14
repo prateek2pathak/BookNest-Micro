@@ -5,6 +5,7 @@ import Login from "./screens/Login";
 import Books from "./screens/Books";
 import BookDetails from "./screens/BookDetails";
 import BookForm from "./screens/BookForm";
+import ServiceStatus from "./components/ServiceStatus";
 
 function App() {
   const isAuthenticated = !!localStorage.getItem("token");
@@ -13,6 +14,7 @@ function App() {
   return (
     <>
       <Toaster position="top-center" />
+      {isAuthenticated && <ServiceStatus />}
       <Router>
         <Routes>
           <Route

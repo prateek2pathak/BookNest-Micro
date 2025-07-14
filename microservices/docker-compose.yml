@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # Authentication Service
+  auth-service:
+    build: ./auth-service
+    container_name: booknest-auth-service
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      PORT: 5001
+      MONGODB_URI: "mongodb+srv://prateekpathak042:prateek2004@ac-jsjvtzw.iiynm78.mongodb.net/auth_service?retryWrites=true&w=majority"
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV:-development}
+    networks:
+      - booknest-network
+
+  # Book Service
+  book-service:
+    build: ./book-service
+    container_name: booknest-book-service
+    restart: unless-stopped
+    ports:
+      - "5002:5002"
+    environment:
+      PORT: 5002
+      MONGODB_URI: "mongodb+srv://prateekpathak042:prateek2004@ac-jsjvtzw.iiynm78.mongodb.net/book_service?retryWrites=true&w=majority"
+      AUTH_SERVICE_URL: http://auth-service:5001
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      NODE_ENV: ${NODE_ENV:-development}
+    depends_on:
+      - auth-service
+    networks:
+      - booknest-network
+
+  # Comment Service
+  comment-service:
+    build: ./comment-service
+    container_name: booknest-comment-service
+    restart: unless-stopped
+    ports:
+      - "5003:5003"
+    environment:
+      PORT: 5003
+      MONGODB_URI: "mongodb+srv://prateekpathak042:prateek2004@ac-jsjvtzw.iiynm78.mongodb.net/comment_service?retryWrites=true&w=majority"
+      AUTH_SERVICE_URL: http://auth-service:5001
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV:-development}
+    depends_on:
+      - auth-service
+    networks:
+      - booknest-network
+
+  # Chat Service
+  chat-service:
+    build: ./chat-service
+    container_name: booknest-chat-service
+    restart: unless-stopped
+    ports:
+      - "5004:5004"
+    environment:
+      PORT: 5004
+      MONGODB_URI: "mongodb+srv://prateekpathak042:prateek2004@ac-jsjvtzw.iiynm78.mongodb.net/chat_service?retryWrites=true&w=majority"
+      CLIENT_URL: ${CLIENT_URL}
+      NODE_ENV: ${NODE_ENV:-development}
+    networks:
+      - booknest-network
+
+  # API Gateway
+  api-gateway:
+    build: ./api-gateway
+    container_name: booknest-api-gateway
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      AUTH_SERVICE_URL: http://auth-service:5001
+      BOOK_SERVICE_URL: http://book-service:5002
+      COMMENT_SERVICE_URL: http://comment-service:5003
+      CHAT_SERVICE_URL: http://chat-service:5004
+      CLIENT_URL: ${CLIENT_URL}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS}
+      NODE_ENV: ${NODE_ENV:-development}
+    depends_on:
+      - auth-service
+      - book-service
+      - comment-service
+      - chat-service
+    networks:
+      - booknest-network
+
+networks:
+  booknest-network:
+    driver: bridge
